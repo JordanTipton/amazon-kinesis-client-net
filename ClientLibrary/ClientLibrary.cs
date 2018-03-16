@@ -627,7 +627,7 @@ namespace Amazon.Kinesis.ClientLibrary
             internal override void Checkpoint(string sequenceNumber, CheckpointErrorHandler errorHandler = null)
             {
                 _p.CheckpointSeqNo = sequenceNumber;
-                _p._stateMachine.Fire(Trigger.BeginCheckpoint);
+                _p._stateMachine.FireNoQueue(Trigger.BeginCheckpoint);
                 if (_p.CheckpointError != null && errorHandler != null)
                 {
                     errorHandler.Invoke(sequenceNumber, _p.CheckpointError, this);
@@ -686,7 +686,7 @@ namespace Amazon.Kinesis.ClientLibrary
             if (initAction != null)
             {
                 ShardId = initAction.ShardId;
-                _stateMachine.Fire(Trigger.BeginInitialize);
+                _stateMachine.FireNoQueue(Trigger.BeginInitialize);
                 return;
             }
 
@@ -694,7 +694,7 @@ namespace Amazon.Kinesis.ClientLibrary
             if (processRecordAction != null)
             {
                 Records = processRecordAction.Records;
-                _stateMachine.Fire(Trigger.BeginProcessRecords);
+                _stateMachine.FireNoQueue(Trigger.BeginProcessRecords);
                 return;
             }
 
@@ -702,7 +702,7 @@ namespace Amazon.Kinesis.ClientLibrary
             if (shutdownAction != null)
             {
                 ShutdownReason = (ShutdownReason) Enum.Parse(typeof(ShutdownReason), shutdownAction.Reason);
-                _stateMachine.Fire(Trigger.BeginShutdown);
+                _stateMachine.FireNoQueue(Trigger.BeginShutdown);
                 return;
             }
 
@@ -711,7 +711,7 @@ namespace Amazon.Kinesis.ClientLibrary
             {
                 CheckpointError = checkpointAction.Error;
                 CheckpointSeqNo = checkpointAction.SequenceNumber;
-                _stateMachine.Fire(Trigger.FinishCheckpoint);
+                _stateMachine.FireNoQueue(Trigger.FinishCheckpoint);
                 return;
             }
 
@@ -768,7 +768,7 @@ namespace Amazon.Kinesis.ClientLibrary
         private void BeginInitialize()
         {
             _processor.Initialize(new DefaultInitializationInput(ShardId));
-            _stateMachine.Fire(Trigger.FinishInitialize);
+            _stateMachine.FireNoQueue(Trigger.FinishInitialize);
         }
 
         private void FinishInitialize()
@@ -779,7 +779,7 @@ namespace Amazon.Kinesis.ClientLibrary
         private void BeginShutdown()
         {
             _processor.Shutdown(new DefaultShutdownInput(ShutdownReason, _checkpointer));
-            _stateMachine.Fire(Trigger.FinishShutdown);
+            _stateMachine.FireNoQueue(Trigger.FinishShutdown);
         }
 
         private void FinishShutdown()
@@ -790,7 +790,7 @@ namespace Amazon.Kinesis.ClientLibrary
         private void BeginProcessRecords()
         {
             _processor.ProcessRecords(new DefaultProcessRecordsInput(Records, _checkpointer));
-            _stateMachine.Fire(Trigger.FinishProcessRecords);
+            _stateMachine.FireNoQueue(Trigger.FinishProcessRecords);
         }
 
         private void FinishProcessRecords()

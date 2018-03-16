@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Amazon.Kinesis.ClientLibrary;
 
 namespace Amazon.Kinesis.ClientLibrary.SampleConsumer
 {
@@ -65,7 +64,7 @@ namespace Amazon.Kinesis.ClientLibrary.SampleConsumer
         /// </param>
         public void ProcessRecords(ProcessRecordsInput input)
         {
-            Console.Error.WriteLine("Processing " + input.Records.Count + " records from " + _kinesisShardId);
+            Console.WriteLine("Processing " + input.Records.Count + " records from " + _kinesisShardId);
 
             // Process records and perform all exception handling.
             ProcessRecordsWithRetries(input.Records);
