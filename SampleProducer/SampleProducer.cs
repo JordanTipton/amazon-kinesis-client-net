@@ -17,6 +17,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.Kinesis;
 using Amazon.Kinesis.Model;
@@ -58,7 +59,7 @@ namespace Amazon.Kinesis.ClientLibrary.SampleProducer
         /// This method verifies your credentials, creates a Kinesis stream, waits for the stream
         /// to become active, then puts 10 records in it, and (optionally) deletes the stream.
         /// </summary>
-        public static void Main(string[] args)
+        public async static Task Main(string[] args)
         {
             const string myStreamName = "myTestStream";
             const int myStreamSize = 1;
@@ -69,7 +70,7 @@ namespace Amazon.Kinesis.ClientLibrary.SampleProducer
                 createStreamRequest.StreamName = myStreamName;
                 createStreamRequest.ShardCount = myStreamSize;
                 var createStreamReq = createStreamRequest;
-                kinesisClient.CreateStream(createStreamReq);
+                await kinesisClient.CreateStreamAsync(createStreamReq);
                 Console.Error.WriteLine("Created Stream : " + myStreamName);
             }
             catch (ResourceInUseException)
@@ -79,7 +80,7 @@ namespace Amazon.Kinesis.ClientLibrary.SampleProducer
                 Environment.Exit(1);
             }
 
-            WaitForStreamToBecomeAvailable(myStreamName);
+            await WaitForStreamToBecomeAvailable(myStreamName);
 
             Console.Error.WriteLine("Putting records in stream : " + myStreamName);
             // Write 10 UTF-8 encoded records to the stream.
@@ -89,7 +90,7 @@ namespace Amazon.Kinesis.ClientLibrary.SampleProducer
                 requestRecord.StreamName = myStreamName;
                 requestRecord.Data = new MemoryStream(Encoding.UTF8.GetBytes("testData-" + j));
                 requestRecord.PartitionKey = "partitionKey-" + j;
-                PutRecordResult putResult = kinesisClient.PutRecord(requestRecord);
+                var putResult = await kinesisClient.PutRecordAsync(requestRecord);
                 Console.Error.WriteLine(
                     String.Format("Successfully putrecord {0}:\n\t partition key = {1,15}, shard ID = {2}",
                         j, requestRecord.PartitionKey, putResult.ShardId));
@@ -118,14 +119,16 @@ namespace Amazon.Kinesis.ClientLibrary.SampleProducer
         /// This method waits a maximum of 10 minutes for the specified stream to become active.
         /// <param name="myStreamName">Name of the stream whose active status is waited upon.</param>
         /// </summary>
-        private static void WaitForStreamToBecomeAvailable(string myStreamName)
+        private async static Task WaitForStreamToBecomeAvailable(string myStreamName)
         {
             var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(10);
             while (DateTime.UtcNow < deadline)
             {
-                DescribeStreamRequest describeStreamReq = new DescribeStreamRequest();
-                describeStreamReq.StreamName = myStreamName;
-                DescribeStreamResult describeResult = kinesisClient.DescribeStream(describeStreamReq);
+               var describeStreamReq = new DescribeStreamRequest
+                {
+                    StreamName = myStreamName
+                };
+                var describeResult = await kinesisClient.DescribeStreamAsync(describeStreamReq);
                 string streamStatus = describeResult.StreamDescription.StreamStatus;
                 Console.Error.WriteLine("  - current state: " + streamStatus);
                 if (streamStatus == StreamStatus.ACTIVE)

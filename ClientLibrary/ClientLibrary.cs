@@ -12,6 +12,8 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+using System.Runtime.CompilerServices;
+
 
 using System;
 using System.Runtime.Serialization;
@@ -22,6 +24,7 @@ using System.Text;
 using System.Linq;
 using Stateless;
 using System.Threading;
+[assembly: InternalsVisibleTo("ClientTests")]
 
 namespace Amazon.Kinesis.ClientLibrary
 {
@@ -354,6 +357,7 @@ namespace Amazon.Kinesis.ClientLibrary
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine(e.ToString());
                     ms.Position = 0;
                     throw new MalformedActionException("Received an action which couldn't be understood: " + json, e);
                 }

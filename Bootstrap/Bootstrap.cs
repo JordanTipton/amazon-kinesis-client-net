@@ -20,7 +20,9 @@ using System.Diagnostics;
 using CommandLine;
 using CommandLine.Text;
 using System.Linq;
+#if NET461
 using Microsoft.Win32;
+#endif
 
 namespace Amazon.Kinesis.ClientLibrary.Bootstrap
 {
@@ -116,17 +118,6 @@ namespace Amazon.Kinesis.ClientLibrary.Bootstrap
         [Option('e', "execute", HelpText = "Actually launch the KCL. If not specified, prints the command used to launch the KCL.")]
         public bool ShouldExecute { get; set; }
 
-        [HelpOption]
-        public string GetUsage()
-        {
-            var help = new HelpText
-            {
-                AdditionalNewLineAfterOption = true,
-                AddDashesToOption = true
-            };
-            help.AddOptions(this);
-            return help;
-        }
     }
 
     internal enum OperatingSystemCategory
@@ -221,7 +212,7 @@ namespace Amazon.Kinesis.ClientLibrary.Bootstrap
             catch
             {
             }
-
+#if NET461
             // Failing that, look in the registry.
             foreach (var view in new [] { RegistryView.Registry64, RegistryView.Registry32 })
             { 
@@ -238,58 +229,58 @@ namespace Amazon.Kinesis.ClientLibrary.Bootstrap
                     }
                 }
             }
-                
+#endif
             return null;
         }
 
         public static void Main(string[] args)
         {
-            var options = new Options();
-            if (Parser.Default.ParseArguments(args, options))
-            {
-                string javaClassPath = FetchJars(options.JarFolder);
-                string java = FindJava(options.JavaLocation);
+            Parser.Default.ParseArguments<Options>(args)
+               .WithParsed<Options>(options =>
+           {
+               string javaClassPath = FetchJars(options.JarFolder);
+               string java = FindJava(options.JavaLocation);
 
-                if (java == null)
-                {
-                    Console.Error.WriteLine("java could not be found. You may need to install it, or manually specifiy the path to it.");
-                    Environment.Exit(2);
-                }
+               if (java == null)
+               {
+                   Console.Error.WriteLine("java could not be found. You may need to install it, or manually specifiy the path to it.");
+                   Environment.Exit(2);
+               }
 
-                List<string> cmd = new List<string>()
-                {
+               List<string> cmd = new List<string>()
+               {
                     java,
                     "-cp",
                     javaClassPath,
                     "com.amazonaws.services.kinesis.multilang.MultiLangDaemon",
                     options.PropertiesFile
-                };
-                if (options.ShouldExecute)
-                {
+               };
+               if (options.ShouldExecute)
+               {
                     // Start the KCL.
                     Process proc = new Process
-                    {
-                        StartInfo = new ProcessStartInfo
-                        {
-                            FileName = cmd[0],
-                            Arguments = string.Join(" ", cmd.Skip(1)),
-                            UseShellExecute = false
-                        }
-                    };
-                    proc.Start();
-                    proc.WaitForExit();
-                }
-                else
-                {
+                   {
+                       StartInfo = new ProcessStartInfo
+                       {
+                           FileName = cmd[0],
+                           Arguments = string.Join(" ", cmd.Skip(1)),
+                           UseShellExecute = false
+                       }
+                   };
+                   proc.Start();
+                   proc.WaitForExit();
+               }
+               else
+               {
                     // Print out a command that can be used to start the KCL.
                     string c = string.Join(" ", cmd.Select(f => "\"" + f + "\""));
-                    if (CURRENT_OS == OperatingSystemCategory.WINDOWS)
-                    {
-                        c = "& " + c;
-                    }
-                    Console.WriteLine(c);
-                }
-            }
+                   if (CURRENT_OS == OperatingSystemCategory.WINDOWS)
+                   {
+                       c = "& " + c;
+                   }
+                   Console.WriteLine(c);
+               }
+           });
         }
     }
 }
