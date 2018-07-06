@@ -1,4 +1,4 @@
-# .Net Core 2.0 Amazon Kinesis Client Library for .NET
+# .Net Core 2.0 Amazon Kinesis Client Library
 
 This package provides an interface to the [Amazon Kinesis Client Library][amazon-kcl] (KCL) [MultiLangDaemon][multi-lang-daemon] for the .NET Framework. This fork upgrades the client to .Net Core 2.0. A modified version of Stateless (Statless.NoQueue) is used to support the functionality required by the .Net KCL Client in .Net Core 2.0.
 
